@@ -1,6 +1,46 @@
 @SmartTask.Api_HostAddress = http://localhost:5047
+# Replace taskId with the ID returned by Create a task.
+@taskId = 00000000-0000-0000-0000-000000000000
 
-GET {{SmartTask.Api_HostAddress}}/weatherforecast/
+### List tasks
+GET {{SmartTask.Api_HostAddress}}/api/tasks
 Accept: application/json
 
-###
+### Create a task
+POST {{SmartTask.Api_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Learn Clean Architecture",
+  "description": "Build and test the Task API."
+}
+
+### Get a task
+GET {{SmartTask.Api_HostAddress}}/api/tasks/{{taskId}}
+
+### Replace a task
+PUT {{SmartTask.Api_HostAddress}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "title": "Learn Clean Architecture",
+  "description": "Completed the workshop.",
+  "isCompleted": true
+}
+
+### Delete a task
+DELETE {{SmartTask.Api_HostAddress}}/api/tasks/{{taskId}}
+
+### Validation error (400)
+POST {{SmartTask.Api_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": " "
+}
+
+### Missing task (404)
+GET {{SmartTask.Api_HostAddress}}/api/tasks/00000000-0000-0000-0000-000000000000
+
+### OpenAPI document (development only)
+GET {{SmartTask.Api_HostAddress}}/openapi/v1.json
