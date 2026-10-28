@@ -1,0 +1,47 @@
+@host = http://localhost:5047
+# Replace customerId with the ID returned by Create a customer.
+@customerId = 00000000-0000-0000-0000-000000000000
+
+### List customers
+GET {{host}}/api/customers
+Accept: application/json
+
+### Create a customer
+POST {{host}}/api/customers
+Content-Type: application/json
+
+{
+  "name": "Example Customer",
+  "email": "customer@example.com",
+  "phone": "+1 555 0100"
+}
+
+### Get a customer
+GET {{host}}/api/customers/{{customerId}}
+
+### Replace customer details (omitting phone clears it)
+PUT {{host}}/api/customers/{{customerId}}
+Content-Type: application/json
+
+{
+  "name": "Updated Customer",
+  "email": "updated@example.com"
+}
+
+### Delete a customer
+DELETE {{host}}/api/customers/{{customerId}}
+
+### Validation error (400)
+POST {{host}}/api/customers
+Content-Type: application/json
+
+{
+  "name": " ",
+  "email": "not-an-email"
+}
+
+### Missing customer (404)
+GET {{host}}/api/customers/00000000-0000-0000-0000-000000000000
+
+### OpenAPI document (development only)
+GET {{host}}/openapi/v1.json

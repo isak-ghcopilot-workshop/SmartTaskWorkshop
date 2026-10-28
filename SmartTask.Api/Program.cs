@@ -6,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddSingleton<ICustomerRepository, InMemoryCustomerRepository>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddValidation();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
@@ -27,6 +29,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapTasks();
+app.MapCustomers();
 app.Run();
 
 public partial class Program;
