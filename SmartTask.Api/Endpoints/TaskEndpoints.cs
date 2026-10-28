@@ -27,9 +27,12 @@ public static class TaskEndpoints
             .WithDescription("Returns a task by ID, or 404 when it does not exist.");
 
         group.MapPost("/", async (
-            CreateTaskRequest request, ITaskService service, CancellationToken cancellationToken) =>
+            CreateTaskRequest request, ITaskService service, ILoggerFactory loggerFactory,
+            HttpContext context, CancellationToken cancellationToken) =>
         {
             var task = await service.CreateAsync(request.Title, request.Description, cancellationToken);
+            TaskAuditLog.Mutation(loggerFactory.CreateLogger(TaskAuditLog.CategoryName),
+                "Created", task.Id, DateTimeOffset.UtcNow, context.TraceIdentifier);
             return TypedResults.Created($"/api/tasks/{task.Id}", task);
         })
             .WithName("CreateTask")
@@ -38,11 +41,17 @@ public static class TaskEndpoints
             .ProducesValidationProblem();
 
         group.MapPut("/{id:guid}", async Task<Results<Ok<TaskResponse>, NotFound>> (
-            Guid id, UpdateTaskRequest request, ITaskService service, CancellationToken cancellationToken) =>
+            Guid id, UpdateTaskRequest request, ITaskService service, ILoggerFactory loggerFactory,
+            HttpContext context, CancellationToken cancellationToken) =>
         {
             var task = await service.UpdateAsync(
                 id, request.Title, request.Description, request.IsCompleted, cancellationToken);
-            return task is null ? TypedResults.NotFound() : TypedResults.Ok(task);
+            if (task is null)
+                return TypedResults.NotFound();
+
+            TaskAuditLog.Mutation(loggerFactory.CreateLogger(TaskAuditLog.CategoryName),
+                "Updated", task.Id, DateTimeOffset.UtcNow, context.TraceIdentifier);
+            return TypedResults.Ok(task);
         })
             .WithName("UpdateTask")
             .WithSummary("Update a task")
@@ -50,8 +59,16 @@ public static class TaskEndpoints
             .ProducesValidationProblem();
 
         group.MapDelete("/{id:guid}", async Task<Results<NoContent, NotFound>> (
-            Guid id, ITaskService service, CancellationToken cancellationToken) =>
-            await service.DeleteAsync(id, cancellationToken) ? TypedResults.NoContent() : TypedResults.NotFound())
+            Guid id, ITaskService service, ILoggerFactory loggerFactory,
+            HttpContext context, CancellationToken cancellationToken) =>
+        {
+            if (!await service.DeleteAsync(id, cancellationToken))
+                return TypedResults.NotFound();
+
+            TaskAuditLog.Mutation(loggerFactory.CreateLogger(TaskAuditLog.CategoryName),
+                "Deleted", id, DateTimeOffset.UtcNow, context.TraceIdentifier);
+            return TypedResults.NoContent();
+        })
             .WithName("DeleteTask")
             .WithSummary("Delete a task")
             .WithDescription("Removes a task, or returns 404 when it does not exist.");
